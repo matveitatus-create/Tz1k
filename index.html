@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎰 Lucky Casino</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d0d1a;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* анимированный фон */
+  .bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(135deg, #0d0d1a, #1a0b2e, #0d1a2e, #2e0b1a);
+    background-size: 400% 400%;
+    animation: gradient 12s ease infinite;
+  }
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .glow-orb {
+    position: fixed; border-radius: 50%; filter: blur(80px); opacity: .35; z-index: -1;
+    animation: float 8s ease-in-out infinite;
+  }
+  .orb1 { width: 200px; height: 200px; background: #ff2d78; top: -50px; left: -50px; }
+  .orb2 { width: 250px; height: 250px; background: #7b2dff; bottom: -80px; right: -60px; animation-delay: 2s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(30px); }
+  }
+
+  .container { max-width: 420px; margin: 0 auto; padding: 16px; }
+
+  .header { text-align: center; padding: 20px 0 10px; }
+  .header h1 {
+    font-size: 28px; letter-spacing: 2px;
+    background: linear-gradient(90deg, #ffd700, #ff2d78, #7b2dff, #ffd700);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shine 4s linear infinite;
+    text-shadow: 0 0 30px rgba(255, 45, 120, .4);
+  }
+  @keyframes shine { to { background-position: 300% 0; } }
+
+  .balance-card {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,215,0,.35);
+    border-radius: 16px; padding: 14px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 25px rgba(255,215,0,.12), inset 0 0 20px rgba(255,255,255,.03);
+    margin-bottom: 14px;
+  }
+  .balance-card .coins { font-size: 22px; font-weight: bold; color: #ffd700; }
+  .balance-card .label { font-size: 12px; opacity: .7; text-transform: uppercase; letter-spacing: 1px; }
+
+  .bet-control {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .bet-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 2px solid #7b2dff; background: rgba(123,45,255,.15);
+    color: #fff; font-size: 22px; cursor: pointer;
+    transition: all .15s;
+  }
+  .bet-btn:active { transform: scale(.88); background: rgba(123,45,255,.45); }
+  .bet-val {
+    font-size: 18px; font-weight: bold; padding: 8px 20px;
+    background: rgba(255,45,120,.12); border: 1px solid rgba(255,45,120,.4);
+    border-radius: 30px; min-width: 110px; text-align: center;
+  }
+
+  .games { display: flex; flex-direction: column; gap: 14px; }
+  .game-card {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 20px; padding: 18px;
+    backdrop-filter: blur(10px);
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .game-card.active { border-color: #ffd700; box-shadow: 0 0 30px rgba(255,215,0,.15); }
+  .game-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: .9; }
+
+  /* слоты */
+  .reels { display: flex; justify-content: center; gap: 12px; margin: 8px 0 14px; }
+  .reel {
+    width: 72px; height: 72px; font-size: 44px;
+    background: linear-gradient(180deg, #1a1a2e, #0f0f1a);
+    border: 2px solid rgba(255,215,0,.4); border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 15px rgba(0,0,0,.6), 0 0 12px rgba(255,215,0,.1);
+  }
+  .reel.spinning { animation: reelBlur .12s linear infinite; border-color: #ff2d78; }
+  @keyframes reelBlur {
+    0% { transform: translateY(-4px); filter: blur(2px); }
+    100% { transform: translateY(4px); filter: blur(0); }
+  }
+  .reel.win { animation: winPulse .5s ease 3; border-color: #00ff88; }
+  @keyframes winPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0,255,136,.3); }
+    50% { box-shadow: 0 0 35px rgba(0,255,136,.9); transform: scale(1.08); }
+  }
+
+  /* кубики */
+  .dice-row { display: flex; justify-content: center; gap: 30px; margin: 8px 0 14px; }
+  .dice { font-size: 56px; transition: transform .1s; }
+  .dice.rolling { animation: shake .15s linear infinite; }
+  @keyframes shake {
+    0% { transform: rotate(-15deg) translateY(-3px); }
+    50% { transform: rotate(10deg); }
+    100% { transform: rotate(20deg) translateY(3px); }
+  }
+  .dice-label { text-align: center; font-size: 12px; opacity: .6; margin-top: 4px; }
+
+  /* монетка */
+  .coin-wrap { display: flex; justify-content: center; margin: 10px 0 14px; perspective: 600px; }
+  .coin {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffe985, #d4a017);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; color: #7a5c00; font-weight: bold;
+    box-shadow: 0 0 25px rgba(255,215,0,.4), inset 0 -5px 10px rgba(0,0,0,.25);
+    transform-style: preserve-3d;
+  }
+  .coin.flipping { animation: flip .09s linear infinite; }
+  @keyframes flip { to { transform: rotateY(180deg); } }
+
+  .play-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 14px;
+    font-size: 16px; font-weight: bold; color: #fff; cursor: pointer;
+    background: linear-gradient(90deg, #ff2d78, #7b2dff);
+    box-shadow: 0 4px 20px rgba(255,45,120,.35);
+    transition: transform .12s, box-shadow .12s;
+    letter-spacing: 1px;
+  }
+  .play-btn:active { transform: scale(.96); box-shadow: 0 2px 10px rgba(255,45,120,.5); }
+  .play-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .result {
+    text-align: center; min-height: 26px; font-size: 15px; font-weight: 600;
+    margin-top: 4px;
+  }
+  .result.win { color: #00ff88; }
+  .result.lose { color: #ff5470; }
+
+  /* конфетти */
+  .confetti {
+    position: fixed; top: -20px; font-size: 22px; z-index: 100;
+    animation: fall linear forwards; pointer-events: none;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .3; } }
+
+  .toast {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: rgba(0,0,0,.85); border: 1px solid rgba(255,84,112,.5);
+    padding: 10px 22px; border-radius: 30px; font-size: 14px;
+    transition: transform .3s; z-index: 200;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+<div class="toast" id="toast"></div>
+
+<div class="container">
+  <div class="header"><h1>🎰 LUCKY CASINO</h1></div>
+
+  <div class="balance-card">
+    <div>
+      <div class="label">Баланс</div>
+      <div class="coins" id="balance">100 🪙</div>
+    </div>
+    <div style="font-size:30px">💎</div>
+  </div>
+
+  <div class="bet-control">
+    <button class="bet-btn" onclick="changeBet(-10)">−</button>
+    <div class="bet-val">🎯 <span id="bet">10</span></div>
+    <button class="bet-btn" onclick="changeBet(10)">+</button>
+  </div>
+
+  <div class="games">
+    <div class="game-card" id="card-slots">
+      <div class="game-title">🎰 Слоты — три в ряд x10</div>
+      <div class="reels">
+        <div class="reel" id="r1">🍒</div>
+        <div class="reel" id="r2">🍋</div>
+        <div class="reel" id="r3">🍊</div>
+      </div>
+      <button class="play-btn" id="btn-slots" onclick="playSlots()">КРУТИТЬ</button>
+      <div class="result" id="res-slots"></div>
+    </div>
+
+    <div class="game-card" id="card-dice">
+      <div class="game-title">🎲 Кости — выше бота = победа</div>
+      <div class="dice-row">
+        <div><div class="dice" id="dice-user">🎲</div><div class="dice-label">ТЫ</div></div>
+        <div><div class="dice" id="dice-bot">🎲</div><div class="dice-label">БОТ</div></div>
+      </div>
+      <button class="play-btn" id="btn-dice" onclick="playDice()">БРОСИТЬ</button>
+      <div class="result" id="res-dice"></div>
+    </div>
+
+    <div class="game-card" id="card-coin">
+      <div class="game-title">🪙 Монетка — угадай сторону</div>
+      <div class="coin-wrap"><div class="coin" id="coin">🪙</div></div>
+      <button class="play-btn" id="btn-coin" onclick="playCoin()">ПОДБРОСИТЬ</button>
+      <div class="result" id="res-coin"></div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin:18px 0; opacity:.4; font-size:12px">
+    Играй ответственно · Баланс хранится на устройстве
+  </div>
+</div>
+
+<script>
+  // Telegram WebApp
+  let tgUserId = 'guest';
+  try {
+    const tg = window.Telegram.WebApp;
+    tg.ready(); tg.expand();
+    tg.setHeaderColor('#0d0d1a'); tg.setBackgroundColor('#0d0d1a');
+    tgUserId = tg.initDataUnsafe?.user?.id || 'guest';
+  } catch(e) {}
+
+  const SYMBOLS = ['🍒','🍋','🍊','🍇','⭐','💎','7️⃣'];
+  const DICE = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  const STORE_KEY = 'casino_' + tgUserId;
+
+  let state = { balance: 100, bet: 10 };
+  try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); if (s) state = s; } catch(e) {}
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  function render() {
+    document.getElementById('balance').textContent = state.balance + ' 🪙';
+    document.getElementById('bet').textContent = state.bet;
+  }
+  render();
+
+  let busy = false;
+  const $ = id => document.getElementById(id);
+  const rnd = n => Math.floor(Math.random() * n);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function changeBet(d) {
+    state.bet = Math.max(10, Math.min(state.bet + d, Math.max(state.balance, 10)));
+    save(); render();
+  }
+
+  function setResult(id, text, cls) {
+    const el = $(id); el.textContent = text;
+    el.className = 'result ' + cls;
+  }
+
+  function confetti() {
+    const emo = ['🎉','✨','💰','🪙','💎','🎊'];
+    for (let i = 0; i < 40; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = emo[rnd(emo.length)];
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+      c.style.animationDelay = Math.random() * 0.5 + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3500);
+    }
+  }
+
+  function takeBet() {
+    if (state.balance < state.bet) { toast('❌ Не хватает монет!'); return false; }
+    state.balance -= state.bet; save(); render();
+    return true;
+  }
+
+  function payout(multiplier) {
+    const win = state.bet * multiplier;
+    state.balance += win; save(); render();
+    if (multiplier >= 10) confetti();
+    return win;
+  }
+
+  async function playSlots() {
+    if (busy) return;
+    if (!takeBet()) return;
+    busy = true; $('btn-slots').disabled = true;
+    $('card-slots').classList.add('active');
+    setResult('res-slots', 'Крутим...', '');
+    const reels = [$('r1'), $('r2'), $('r3')];
+    reels.forEach(r => r.classList.remove('win'));
+    reels.forEach(r => r.classList.add('spinning'));
+
+    const result = [SYMBOLS[rnd(7)], SYMBOLS[rnd(7)], SYMBOLS[rnd(7)]];
+    const stops = [900, 1500, 2100];
+    reels.forEach((reel, i) => {
+      const iv = setInterval(() => { reel.textContent = SYMBOLS[rnd(7)]; }, 90);
+      setTimeout(() => {
+        clearInterval(iv);
+        reel.textContent = result[i];
+        reel.classList.remove('spinning');
+        if (i === 2) finishSlots(result);
+      }, stops[i]);
+    });
+  }
+
+  function finishSlots(result) {
+    const [a, b, c] = result;
+    const line = result.join(' ');
+    if (a === b && b === c) {
+      const win = payout(10);
+      $('r1').classList.add('win'); $('r2').classList.add('win'); $('r3').classList.add('win');
+      setResult('res-slots', `🎉 ДЖЕКПОТ! +${win} монет`, 'win');
+    } else if (a === b || b === c || a === c) {
+      const win = payout(2);
+      setResult('res-slots', `✨ Совпадение! +${win} монет`, 'win');
+    } else {
+      setResult('res-slots', `${line} · Проигрыш ${state.bet} 😢`, 'lose');
+    }
+    $('card-slots').classList.remove('active');
+    $('btn-slots').disabled = false; busy = false;
+  }
+
+  async function playDice() {
+    if (busy) return;
+    if (!takeBet()) return;
+    busy = true; $('btn-dice').disabled = true;
+    $('card-dice').classList.add('active');
+    setResult('res-dice', 'Бросаем...', '');
+    const du = $('dice-user'), db = $('dice-bot');
+    du.classList.add('rolling'); db.classList.add('rolling');
+    const iv = setInterval(() => {
+      du.textContent = DICE[rnd(6)]; db.textContent = DICE[rnd(6)];
+    }, 90);
+    await sleep(1400);
+    clearInterval(iv);
+    const u = rnd(6), b = rnd(6);
+    du.textContent = DICE[u]; db.textContent = DICE[b];
+    du.classList.remove('rolling'); db.classList.remove('rolling');
+    await sleep(300);
+    if (u > b) { const w = payout(2); setResult('res-dice', `🎉 ${u+1} vs ${b+1} · Победа! +${w}`, 'win'); }
+    else if (u < b) { setResult('res-dice', `${u+1} vs ${b+1} · Проигрыш ${state.bet} 😢`, 'lose'); }
+    else { state.balance += state.bet; save(); render(); setResult('res-dice', `🤝 ${u+1} vs ${b+1} · Ничья`, ''); }
+    $('card-dice').classList.remove('active');
+    $('btn-dice').disabled = false; busy = false;
+  }
+
+  async function playCoin() {
+    if (busy) return;
+    if (!takeBet()) return;
+    busy = true; $('btn-coin').disabled = true;
+    $('card-coin').classList.add('active');
+    setResult('res-coin', 'Монетка крутится...', '');
+    const coin = $('coin');
+    coin.classList.add('flipping');
+    await sleep(1200);
+    coin.classList.remove('flipping');
+    const heads = Math.random() < 0.5;
+    coin.textContent = heads ? '🦅' : '👑';
+    await sleep(400);
+    if (Math.random() < 0.5) { const w = payout(2); setResult('res-coin', `🎉 ${heads?'Орёл':'Решка'} · Угадал! +${w}`, 'win'); }
+    else { setResult('res-coin', `${heads?'Орёл':'Решка'} · Мимо, -${state.bet} 😢`, 'lose'); }
+    setTimeout(() => { coin.textContent = '🪙'; }, 1500);
+    $('card-coin').classList.remove('active');
+    $('btn-coin').disabled = false; busy = false;
+  }
+</script>
+</body>
+</html>
