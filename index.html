@@ -1764,7 +1764,8 @@
       if (odds > 0) { returns += rlBets[spot] * (1 + odds); winners.push(spot); }
     }
     state.balance += returns;
-    if (returns > 0) { state.wins++; state.best = Math.max(state.best, returns - total); }
+    const net = returns - total;
+    if (net > 0) { state.wins++; state.best = Math.max(state.best, net); }
     save(); render();
 
     document.querySelectorAll('#rlTable .rl-cell.win').forEach(c => c.classList.remove('win'));
@@ -1782,15 +1783,14 @@
     if (rlHistory.length > 12) rlHistory.pop();
     renderRouletteHistory();
 
-    const net = returns - total;
-    if (returns > 0) {
+    if (net > 0) {
       setResult('res-roulette', `🎉 ${num} (${cName}) — выигрыш +${net}`, 'win');
       floatGain('+' + net, 'good'); coinRain(18);
       if (net >= total) { confetti(); flash(); banner('РУЛЕТКА!', '+' + net); }
       sWin(); haptic('win');
     } else {
-      setResult('res-roulette', `${num} (${cName}) — мимо, −${total}`, 'lose');
-      floatGain('−' + total, 'bad');
+      setResult('res-roulette', `${num} (${cName}) — ${returns > 0 ? 'частично мимо' : 'мимо'}, ${net}`, 'lose');
+      floatGain(String(net), 'bad');
       sLose(); haptic('lose');
     }
 
