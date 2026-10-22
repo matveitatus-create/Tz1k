@@ -685,10 +685,10 @@
   }
   @keyframes btnShine { 0%, 55% { left: -90%; } 100% { left: 150%; } }
   .play-btn:active { transform: scale(.96); }
-  .play-btn:disabled { opacity: .55; cursor: progress; transform: none; }
+  .play-btn:disabled { opacity: .9; cursor: progress; transform: none; }
   .play-btn:disabled::after { display: none; }
-  /* состояние «идёт игра» */
-  .play-btn.busy {
+  /* состояние «идёт игра» (busy — слоты/кости/монетка, :disabled — плинко/рулетка) */
+  .play-btn.busy, .play-btn:disabled {
     background: linear-gradient(90deg, #d18f06, #ffe08a, #f0b429, #d18f06);
     background-size: 250% 100%;
     animation: busySlide 1.1s linear infinite;
