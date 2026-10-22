@@ -307,6 +307,12 @@
     content: attr(data-suit); position: absolute; right: 2px; top: -22px;
     font-size: 115px; opacity: .06; transform: rotate(12deg); pointer-events: none;
   }
+  /* золотая кромка сверху + мягкая виньетка */
+  .game-card::before {
+    content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,209,102,.75), transparent);
+    pointer-events: none;
+  }
   #card-slots { background: linear-gradient(160deg, rgba(160,30,60,.22), rgba(255,255,255,.04)); border-color: rgba(255,209,102,.3); }
   #card-dice  { background: linear-gradient(160deg, rgba(14,90,50,.3), rgba(255,255,255,.04)); border-color: rgba(46,255,143,.25); }
   #card-coin  { background: linear-gradient(160deg, rgba(110,70,8,.28), rgba(255,255,255,.04)); border-color: rgba(255,209,102,.3); }
@@ -314,23 +320,48 @@
   .game-title { font-size: 15px; font-weight: 700; }
   .game-hint { font-size: 12px; opacity: .5; margin: 4px 0 14px; }
 
-  /* --- ДЖЕКПОТ --- */
+  /* --- ДЖЕКПОТ-ТОТЕМ --- */
   .jp-box {
-    text-align: center; background: #0a0518;
-    border: 1px solid rgba(255,209,102,.55); border-radius: 14px;
-    padding: 8px 6px; margin-bottom: 12px;
-    box-shadow: inset 0 0 18px rgba(255,209,102,.1), 0 0 22px rgba(255,209,102,.12);
+    position: relative; text-align: center; overflow: hidden;
+    background: linear-gradient(180deg, #1c0c33, #0a0518 70%);
+    border: 1px solid rgba(255,209,102,.55); border-radius: 16px;
+    padding: 12px 44px 9px; margin-bottom: 14px;
+    box-shadow: inset 0 0 26px rgba(255,209,102,.12), 0 0 26px rgba(255,209,102,.14);
   }
-  .jp-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,209,102,.75); }
+  .jp-box::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 35%, rgba(255,209,102,.16) 50%, transparent 65%);
+    background-size: 250% 100%;
+    animation: jpShimmer 3.4s linear infinite;
+  }
+  @keyframes jpShimmer { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+  .jp-pillar {
+    position: absolute; top: 6px; bottom: 6px; width: 22px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255,209,102,.25), transparent);
+    border-radius: 4px;
+  }
+  .jp-pillar.l { left: 6px; }
+  .jp-pillar.r { right: 6px; }
+  .jp-crown {
+    display: inline-block; font-size: 19px; line-height: 1;
+    filter: drop-shadow(0 0 10px rgba(255,209,102,.95));
+    animation: crownBob 2.4s ease-in-out infinite;
+  }
+  @keyframes crownBob {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-4px) rotate(5deg); }
+  }
+  .jp-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,209,102,.75); margin-top: 1px; }
   .jp-val {
-    font-family: 'Unbounded', sans-serif; font-size: 23px; font-weight: 900;
-    color: var(--gold); text-shadow: 0 0 14px rgba(255,209,102,.75);
+    font-family: 'Unbounded', sans-serif; font-size: 26px; font-weight: 900;
+    color: var(--gold); text-shadow: 0 0 16px rgba(255,209,102,.8), 0 2px 0 #7a5c00;
     animation: jpPulse 1.6s ease infinite;
   }
   @keyframes jpPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.06); text-shadow: 0 0 26px rgba(255,209,102,1); }
+    50% { transform: scale(1.07); text-shadow: 0 0 28px rgba(255,209,102,1), 0 2px 0 #7a5c00; }
   }
+  .jp-note { font-size: 10px; opacity: .5; margin-top: 1px; }
 
   /* --- СЛОТ-МАШИНА --- */
   .machine {
@@ -355,6 +386,7 @@
   }
   .machine-body { display: flex; align-items: center; justify-content: center; gap: 8px; }
   .reels {
+    position: relative;
     display: flex; gap: 10px; padding: 12px; border-radius: 16px;
     border: 2px solid #caa437;
     background:
@@ -379,11 +411,28 @@
   }
   .reel.spinning .cell { filter: blur(1.5px); }
   .reel.spinning { border-color: var(--pink); }
+  .reel.stop { animation: reelBounce .28s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes reelBounce {
+    0% { transform: translateY(-7px); }
+    55% { transform: translateY(3px); }
+    100% { transform: translateY(0); }
+  }
   .reel.win { animation: winPulse .5s ease 3; border-color: var(--green); }
   @keyframes winPulse {
     0%, 100% { box-shadow: 0 0 10px rgba(46,255,143,.3); }
     50% { box-shadow: 0 0 38px rgba(46,255,143,.95); transform: scale(1.08); }
   }
+  /* стрелки линии выплат */
+  .reels::before, .reels::after {
+    content: ''; position: absolute; top: 50%; width: 0; height: 0;
+    border: 7px solid transparent; transform: translateY(-50%);
+    filter: drop-shadow(0 0 4px rgba(255,209,102,.8));
+  }
+  .reels::before { left: -6px; border-right-color: var(--gold); }
+  .reels::after { right: -6px; border-left-color: var(--gold); }
+  .reels.win-line { border-color: var(--green); box-shadow: inset 0 0 26px rgba(0,0,0,.6), 0 0 26px rgba(46,255,143,.45); }
+  .reels.win-line::before { border-right-color: var(--green); }
+  .reels.win-line::after { border-left-color: var(--green); }
   @media (max-width: 390px) {
     .reel { width: 58px; }
     .reels { padding: 10px; gap: 8px; }
@@ -432,7 +481,7 @@
     background: linear-gradient(180deg, #3a3a52, #1d1d2c);
     color: var(--gold); font-weight: 700; font-size: 12px; letter-spacing: .5px;
     cursor: pointer; transition: all .15s; font-family: 'Inter', sans-serif;
-    min-height: 40px;
+    min-height: 44px;
   }
   .front-btn:active { transform: scale(.94); }
   .front-btn.on {
@@ -459,8 +508,32 @@
   .pay b { color: var(--gold); }
 
   /* --- КОСТИ --- */
-  .dice-row { display: flex; justify-content: center; align-items: center; gap: 34px; margin: 6px 0 16px; }
-  .dice-box { text-align: center; }
+  .dice-table {
+    position: relative; border-radius: 18px; padding: 16px 10px 12px; margin-bottom: 14px;
+    background:
+      radial-gradient(ellipse 62% 58% at 50% 34%, rgba(46,255,143,.16), transparent 72%),
+      radial-gradient(ellipse 90% 50% at 50% 118%, rgba(0,0,0,.55), transparent 62%),
+      linear-gradient(180deg, rgba(9,44,26,.6), rgba(4,20,12,.82));
+    border: 1px solid rgba(46,255,143,.22);
+    box-shadow: inset 0 0 34px rgba(0,0,0,.6), 0 0 18px rgba(46,255,143,.07);
+    overflow: hidden;
+  }
+  .dice-table::before {
+    content: ''; position: absolute; inset: 5px; border-radius: 14px;
+    border: 1px solid rgba(255,209,102,.14); pointer-events: none;
+  }
+  .dice-row { display: flex; justify-content: center; align-items: center; gap: 26px; position: relative; }
+  .dice-box { text-align: center; position: relative; }
+  .dice-box::after {
+    content: ''; display: block; width: 66px; height: 12px; margin: 7px auto 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0,0,0,.6), transparent 70%);
+  }
+  .dice-box.rolling-shadow::after { animation: shadowPulse .26s ease-in-out infinite alternate; }
+  @keyframes shadowPulse {
+    from { transform: scale(.7); opacity: .45; }
+    to { transform: scale(1); opacity: .9; }
+  }
   .die {
     width: 84px; height: 84px; border-radius: 18px;
     background: linear-gradient(145deg, #ffffff, #cfcfe6);
@@ -481,29 +554,108 @@
   }
   .die.pop { animation: pop .35s cubic-bezier(.3,1.6,.5,1); }
   @keyframes pop { 0% { transform: scale(.55) rotate(-20deg); } 100% { transform: scale(1) rotate(0); } }
+  .die.win-die {
+    box-shadow: 0 0 0 2px rgba(46,255,143,.9), 0 0 26px rgba(46,255,143,.55), 0 7px 16px rgba(0,0,0,.5);
+    animation: winPulse .5s ease 2;
+  }
+  .die.lose-die {
+    filter: saturate(.5) brightness(.82);
+    box-shadow: 0 0 0 2px rgba(255,84,112,.5), 0 7px 16px rgba(0,0,0,.5);
+  }
   .dice-label { font-size: 12px; letter-spacing: 1.5px; opacity: .62; margin-top: 8px; text-transform: uppercase; }
-  .vs { font-family: 'Unbounded', sans-serif; font-size: 15px; opacity: .5; font-weight: 700; }
+  .vs {
+    font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 1px;
+    width: 40px; height: 40px; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold); background: rgba(0,0,0,.45);
+    border: 1px solid rgba(255,209,102,.5);
+    box-shadow: 0 0 16px rgba(255,209,102,.22), inset 0 0 10px rgba(255,209,102,.12);
+    animation: vsPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes vsPulse {
+    0%, 100% { transform: scale(1); opacity: .85; }
+    50% { transform: scale(1.09); opacity: 1; }
+  }
+  @media (max-width: 360px) {
+    .die { width: 72px; height: 72px; padding: 11px; border-radius: 15px; }
+    .dice-row { gap: 16px; }
+    .dice-box::after { width: 56px; }
+    .vs { width: 34px; height: 34px; font-size: 12px; }
+  }
 
   /* --- МОНЕТКА --- */
-  .coin-wrap { display: flex; justify-content: center; margin: 8px 0 16px; perspective: 700px; }
+  .coin-stage {
+    position: relative; display: flex; flex-direction: column; align-items: center;
+    margin: 4px 0 14px; perspective: 700px;
+  }
+  .coin-halo {
+    position: absolute; top: -8px; left: 50%; margin-left: -84px;
+    width: 168px; height: 168px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(255,209,102,.26), transparent 62%);
+    animation: haloPulse 2.8s ease-in-out infinite;
+  }
+  @keyframes haloPulse {
+    0%, 100% { transform: scale(.9); opacity: .6; }
+    50% { transform: scale(1.08); opacity: 1; }
+  }
   .coin {
+    position: relative; z-index: 1;
     width: 104px; height: 104px; border-radius: 50%;
     background: radial-gradient(circle at 32% 32%, #ffe985, #d4a017);
     display: flex; align-items: center; justify-content: center;
     font-size: 50px; transform-style: preserve-3d;
     box-shadow: 0 0 30px rgba(255,209,102,.45), inset 0 -6px 12px rgba(0,0,0,.3), inset 0 4px 8px rgba(255,255,255,.4), inset 0 0 0 6px rgba(122,92,0,.35);
   }
-  .coin.flipping { animation: coinSpin .26s linear infinite; }
-  @keyframes coinSpin { to { transform: rotateY(360deg); } }
+  .coin.toss { animation: coinToss 1.35s cubic-bezier(.32,.7,.3,1); }
+  @keyframes coinToss {
+    0% { transform: translateY(0) rotateY(0); }
+    42% { transform: translateY(-76px) rotateY(900deg); }
+    72% { transform: translateY(-18px) rotateY(1500deg); }
+    86% { transform: translateY(0) rotateY(1730deg); }
+    94% { transform: translateY(-9px) rotateY(1785deg); }
+    100% { transform: translateY(0) rotateY(1800deg); }
+  }
   .coin.pop { animation: pop .35s cubic-bezier(.3,1.6,.5,1); }
+  .coin-pedestal {
+    width: 128px; height: 16px; border-radius: 50%; margin-top: -9px;
+    background: linear-gradient(180deg, #4a3410, #140d04);
+    box-shadow: 0 8px 16px rgba(0,0,0,.6), inset 0 2px 0 rgba(255,209,102,.4), 0 0 22px rgba(255,209,102,.14);
+  }
   .coin-choice { display: flex; justify-content: center; gap: 12px; margin-bottom: 14px; }
   .side-btn {
-    flex: 1; max-width: 150px; padding: 12px; border-radius: 16px;
+    flex: 1; max-width: 150px; min-height: 46px; padding: 12px; border-radius: 16px;
     background: rgba(0,0,0,.3); border: 2px solid var(--border);
     color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .15s;
   }
-  .side-btn.sel { border-color: var(--gold); background: rgba(255,209,102,.16); box-shadow: 0 0 18px rgba(255,209,102,.2); }
+  .side-btn.sel {
+    border-color: var(--gold); background: rgba(255,209,102,.16);
+    box-shadow: 0 0 18px rgba(255,209,102,.22); transform: translateY(-2px);
+  }
+  .side-btn.sel::after { content: ' ✓'; color: var(--gold); }
   .side-btn:active { transform: scale(.95); }
+
+  /* --- ИСТОРИЯ РАУНДОВ --- */
+  .hist { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; min-height: 26px; }
+  .hist-item {
+    min-width: 28px; height: 26px; padding: 0 7px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; letter-spacing: .3px;
+    background: rgba(255,255,255,.06); border: 1px solid var(--border);
+    animation: histIn .3s cubic-bezier(.3,1.5,.5,1);
+  }
+  @keyframes histIn { from { transform: scale(.4) translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .hist-item.w { color: var(--green); border-color: rgba(46,255,143,.5); background: rgba(46,255,143,.1); }
+  .hist-item.l { color: var(--red); border-color: rgba(255,84,112,.4); background: rgba(255,84,112,.08); }
+  .hist-item.d { color: var(--gold); border-color: rgba(255,209,102,.45); background: rgba(255,209,102,.1); }
+  .hist-empty { font-size: 11px; opacity: .35; align-self: center; }
+
+  /* --- ШАНСЫ / МИКРО-КОПИРАЙТ --- */
+  .odds { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .odd {
+    font-size: 10px; padding: 4px 9px; border-radius: 10px;
+    background: rgba(0,0,0,.3); border: 1px solid var(--border); opacity: .78;
+  }
+  .odd b { color: var(--gold); font-weight: 700; }
 
   /* --- ЗОЛОТАЯ КНОПКА --- */
   .play-btn {
@@ -522,8 +674,16 @@
   }
   @keyframes btnShine { 0%, 55% { left: -90%; } 100% { left: 150%; } }
   .play-btn:active { transform: scale(.96); }
-  .play-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .play-btn:disabled { opacity: .55; cursor: progress; transform: none; }
   .play-btn:disabled::after { display: none; }
+  /* состояние «идёт игра» */
+  .play-btn.busy {
+    background: linear-gradient(90deg, #d18f06, #ffe08a, #f0b429, #d18f06);
+    background-size: 250% 100%;
+    animation: busySlide 1.1s linear infinite;
+    box-shadow: 0 4px 16px rgba(240,180,41,.3), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  @keyframes busySlide { to { background-position: -250% 0; } }
 
   .result { text-align: center; min-height: 28px; font-size: 15px; font-weight: 700; margin-top: 12px; }
   .result.win { color: var(--green); animation: resPop .4s cubic-bezier(.3,1.6,.5,1); }
@@ -824,16 +984,20 @@
   <div class="panel show" id="panel-slots">
     <div class="game-card" id="card-slots" data-suit="♠">
       <div class="game-title">🎰 Однорукий бандит</div>
-      <div class="game-hint">Дёрни рычаг или жми кнопку</div>
+      <div class="game-hint">Дёрни рычаг или жми «КРУТИТЬ» · ⚡ АВТО крутит без остановки</div>
       <div class="jp-box">
+        <div class="jp-pillar l"></div>
+        <div class="jp-pillar r"></div>
+        <div class="jp-crown">👑</div>
         <div class="jp-label">⭐ Прогрессивный джекпот ⭐</div>
         <div class="jp-val" id="jpVal">500</div>
+        <div class="jp-note">Три 7️⃣ срывают весь банк · +10% каждой ставки</div>
       </div>
       <div class="machine">
         <div class="machine-inner">
           <div class="machine-top">★ lucky seven ★</div>
           <div class="machine-body">
-            <div class="reels">
+            <div class="reels" id="reelsBox">
               <div class="reel" id="rw1"><div class="strip" id="s1"><div class="cell">🍒</div></div></div>
               <div class="reel" id="rw2"><div class="strip" id="s2"><div class="cell">🍋</div></div></div>
               <div class="reel" id="rw3"><div class="strip" id="s3"><div class="cell">🍊</div></div></div>
@@ -861,6 +1025,12 @@
       </div>
       <button class="play-btn" id="btn-slots" onclick="playSlots()">★ КРУТИТЬ ★</button>
       <div class="result" id="res-slots"></div>
+      <div class="hist" id="hist-slots"><span class="hist-empty">История спинов появится здесь</span></div>
+      <div class="odds">
+        <span class="odd">Три в ряд <b>≈ 2%</b></span>
+        <span class="odd">Пара <b>≈ 37%</b></span>
+        <span class="odd">7️⃣7️⃣7️⃣ <b>≈ 0.3%</b></span>
+      </div>
     </div>
   </div>
 
@@ -868,14 +1038,22 @@
   <div class="panel" id="panel-dice">
     <div class="game-card" id="card-dice" data-suit="♦">
       <div class="game-title">🎲 Кости</div>
-      <div class="game-hint">Выкинь больше бота — выигрыш ×2</div>
-      <div class="dice-row">
-        <div class="dice-box"><div class="die" id="dice-user"></div><div class="dice-label">Ты</div></div>
-        <div class="vs">VS</div>
-        <div class="dice-box"><div class="die" id="dice-bot"></div><div class="dice-label">Бот</div></div>
+      <div class="game-hint">Выкинь больше бота — выигрыш ×2 · ничья возвращает ставку</div>
+      <div class="dice-table">
+        <div class="dice-row">
+          <div class="dice-box" id="box-user"><div class="die" id="dice-user"></div><div class="dice-label">Ты</div></div>
+          <div class="vs">VS</div>
+          <div class="dice-box" id="box-bot"><div class="die" id="dice-bot"></div><div class="dice-label">Бот</div></div>
+        </div>
       </div>
       <button class="play-btn" id="btn-dice" onclick="playDice()">★ БРОСИТЬ ★</button>
       <div class="result" id="res-dice"></div>
+      <div class="hist" id="hist-dice"><span class="hist-empty">История бросков появится здесь</span></div>
+      <div class="odds">
+        <span class="odd">Победа <b>≈ 42%</b></span>
+        <span class="odd">Ничья <b>≈ 17%</b></span>
+        <span class="odd">Проигрыш <b>≈ 42%</b></span>
+      </div>
     </div>
   </div>
 
@@ -883,14 +1061,24 @@
   <div class="panel" id="panel-coin">
     <div class="game-card" id="card-coin" data-suit="♣">
       <div class="game-title">🪙 Монетка</div>
-      <div class="game-hint">Выбери сторону — угадаешь, выигрыш ×2</div>
-      <div class="coin-wrap"><div class="coin" id="coinEl">🪙</div></div>
+      <div class="game-hint">Орёл или решка? Угадай сторону — забери ×2</div>
+      <div class="coin-stage">
+        <div class="coin-halo"></div>
+        <div class="coin" id="coinEl">🪙</div>
+        <div class="coin-pedestal"></div>
+      </div>
       <div class="coin-choice">
         <button class="side-btn sel" id="ch-heads" onclick="setCoinChoice('heads')">🦅 Орёл</button>
         <button class="side-btn" id="ch-tails" onclick="setCoinChoice('tails')">👑 Решка</button>
       </div>
       <button class="play-btn" id="btn-coin" onclick="playCoin()">★ ПОДБРОСИТЬ ★</button>
       <div class="result" id="res-coin"></div>
+      <div class="hist" id="hist-coin"><span class="hist-empty">История бросков появится здесь</span></div>
+      <div class="odds">
+        <span class="odd">Шанс <b>50 / 50</b></span>
+        <span class="odd">Выплата <b>×2</b></span>
+        <span class="odd">Выбор стороны <b>не сбрасывается</b></span>
+      </div>
     </div>
   </div>
 
@@ -1002,7 +1190,8 @@
   const BONUS = 100, BONUS_CD = 12 * 3600 * 1000;
 
   // ===== состояние =====
-  let state = { balance: 100, bet: 10, games: 0, wins: 0, best: 0, sound: true, lastBonus: 0, jackpot: 500 };
+  let state = { balance: 100, bet: 10, games: 0, wins: 0, best: 0, sound: true, lastBonus: 0, jackpot: 500,
+                streak: 0, histSlots: [], histDice: [], histCoin: [] };
   try {
     const s = JSON.parse(localStorage.getItem(STORE_KEY));
     if (s) state = Object.assign(state, s);
@@ -1164,6 +1353,41 @@
     el.className = 'result' + (cls ? ' ' + cls : '');
   }
 
+  // ===== история раундов / серии / состояния кнопок =====
+  const HIST_BOX = { histSlots: 'hist-slots', histDice: 'hist-dice', histCoin: 'hist-coin' };
+  function pushHist(key, item) {
+    if (!Array.isArray(state[key])) state[key] = [];
+    state[key].unshift(item);
+    state[key] = state[key].slice(0, 8);
+    renderHist(key);
+  }
+  function renderHist(key) {
+    const box = $(HIST_BOX[key]);
+    if (!box) return;
+    const list = Array.isArray(state[key]) ? state[key] : [];
+    if (!list.length) { box.innerHTML = '<span class="hist-empty">История появится здесь</span>'; return; }
+    box.innerHTML = list.map(h =>
+      `<span class="hist-item ${h.c || ''}" title="${h.t || ''}">${h.l}</span>`).join('');
+  }
+  // won: true/false — победа/проигрыш, null — ничья (серию не трогаем)
+  function noteStreak(won) {
+    if (won === null || won === undefined) return;
+    state.streak = won ? state.streak + 1 : 0;
+    if (state.streak === 3 || state.streak === 5 || state.streak === 10 || state.streak === 25) {
+      toast(`🔥 Серия из ${state.streak} побед подряд!`);
+    }
+  }
+  const BTN_IDLE = { 'btn-slots': '★ КРУТИТЬ ★', 'btn-dice': '★ БРОСИТЬ ★', 'btn-coin': '★ ПОДБРОСИТЬ ★' };
+  const BTN_BUSY = { 'btn-slots': '⏳ КРУТИТСЯ…', 'btn-dice': '⏳ БРОСОК…', 'btn-coin': '⏳ В ВОЗДУХЕ…' };
+  function setBusy(id, on) {
+    const b = $(id);
+    if (!b || !BTN_IDLE[id]) return;
+    b.disabled = !!on;
+    b.classList.toggle('busy', !!on);
+    b.textContent = on ? BTN_BUSY[id] : BTN_IDLE[id];
+  }
+  const LOSE_MSGS = ['Не в этот раз 😢', 'Почти! Крути ещё 🍀', 'Мимо… но банк растёт 💰', 'Удача уже рядом 🎯'];
+
   // ===== ставка =====
   function changeBet(d) {
     const max = Math.max(10, Math.floor(state.balance / 10) * 10);
@@ -1225,6 +1449,8 @@
       strip.style.transform = 'translateY(0)';
       setTimeout(() => {
         reel.classList.remove('spinning');
+        reel.classList.add('stop');
+        setTimeout(() => reel.classList.remove('stop'), 300);
         sStop(); haptic();
         res();
       }, duration * 1000 + 40);
@@ -1234,11 +1460,13 @@
   async function playSlots() {
     if (busy || !takeBet()) return;
     busy = true;
-    $('btn-slots').disabled = true;
+    setBusy('btn-slots', true);
     $('card-slots').classList.add('active');
     $('lever').classList.add('pulled');
     setTimeout(() => $('lever').classList.remove('pulled'), 750);
     setResult('res-slots', 'Крутим…', '');
+    const rb = $('reelsBox');
+    rb.classList.remove('win-line');
     ['rw1','rw2','rw3'].forEach(id => { $(id).classList.remove('win'); $(id).classList.add('spinning'); });
 
     const res = [SYMBOLS[rnd(7)], SYMBOLS[rnd(7)], SYMBOLS[rnd(7)]];
@@ -1252,6 +1480,7 @@
     await sleep(150);
 
     const [a, b, c] = res;
+    const line = res.join(' ');
     if (a === b && b === c && a === '7️⃣') {
       const jp = state.jackpot;
       state.jackpot = 500;
@@ -1260,32 +1489,45 @@
       state.best = Math.max(state.best, jp);
       save(); render();
       ['rw1','rw2','rw3'].forEach(id => $(id).classList.add('win'));
+      rb.classList.add('win-line');
       setResult('res-slots', `🎉 ДЖЕКПОТ! +${jp}`, 'win');
       banner('ДЖЕКПОТ!', '+' + jp + ' 🪙');
       floatGain('+' + jp, 'good');
       confetti(); coinRain(36); flash(); shakeScreen();
       sJackpot(); haptic('win');
+      noteStreak(true);
+      pushHist('histSlots', { l: '👑', c: 'd', t: `Джекпот +${jp} · ${line}` });
     } else if (a === b && b === c) {
       const mult = a === '💎' ? 15 : 10;
       const win = payout(mult);
       ['rw1','rw2','rw3'].forEach(id => $(id).classList.add('win'));
+      rb.classList.add('win-line');
       setResult('res-slots', `🎉 Три ${a}! ×${mult} · +${win}`, 'win');
       banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + win + ' 🪙');
       floatGain('+' + win, 'good');
       confetti(); coinRain(20); flash();
       sJackpot(); haptic('win');
+      noteStreak(true);
+      pushHist('histSlots', { l: a, c: 'w', t: `Три в ряд ×${mult} · +${win}` });
     } else if (a === b || b === c || a === c) {
       const win = payout(2);
       setResult('res-slots', `✨ Пара! +${win}`, 'win');
       floatGain('+' + win, 'good'); coinRain(10);
+      if (win >= 500) banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + win + ' 🪙');
       sWin(); haptic('win');
+      noteStreak(true);
+      pushHist('histSlots', { l: '+' + win, c: 'w', t: `Пара ×2 · ${line}` });
     } else {
-      setResult('res-slots', `Проигрыш −${state.bet} 😢`, 'lose');
+      const two7 = (a === '7️⃣' && b === '7️⃣') || (b === '7️⃣' && c === '7️⃣') || (a === '7️⃣' && c === '7️⃣');
+      const msg = two7 ? '😮 Две семёрки — чуть-чуть до джекпота!' : LOSE_MSGS[rnd(LOSE_MSGS.length)];
+      setResult('res-slots', `${msg} · −${state.bet}`, 'lose');
       floatGain('−' + state.bet, 'bad');
       sLose(); haptic('lose');
+      noteStreak(false);
+      pushHist('histSlots', { l: '−' + state.bet, c: 'l', t: line });
     }
     $('card-slots').classList.remove('active');
-    $('btn-slots').disabled = false;
+    setBusy('btn-slots', false);
     busy = false;
   }
 
@@ -1321,11 +1563,15 @@
   async function playDice() {
     if (busy || !takeBet()) return;
     busy = true;
-    $('btn-dice').disabled = true;
+    setBusy('btn-dice', true);
     $('card-dice').classList.add('active');
     setResult('res-dice', 'Бросаем…', '');
     const du = $('dice-user'), db = $('dice-bot');
+    const bu = $('box-user'), bb = $('box-bot');
+    du.classList.remove('win-die', 'lose-die');
+    db.classList.remove('win-die', 'lose-die');
     du.classList.add('rolling'); db.classList.add('rolling');
+    bu.classList.add('rolling-shadow'); bb.classList.add('rolling-shadow');
     const tick = setInterval(sTick, 120);
     const iv = setInterval(() => {
       diceFace(du, 1 + rnd(6));
@@ -1336,6 +1582,7 @@
     const u = 1 + rnd(6), b = 1 + rnd(6);
     diceFace(du, u); diceFace(db, b);
     du.classList.remove('rolling'); db.classList.remove('rolling');
+    bu.classList.remove('rolling-shadow'); bb.classList.remove('rolling-shadow');
     du.classList.add('pop'); db.classList.add('pop');
     setTimeout(() => { du.classList.remove('pop'); db.classList.remove('pop'); }, 400);
     sStop(); haptic();
@@ -1343,19 +1590,28 @@
 
     if (u > b) {
       const w = payout(2);
+      du.classList.add('win-die'); db.classList.add('lose-die');
       setResult('res-dice', `🎉 ${u} : ${b} — победа! +${w}`, 'win');
       floatGain('+' + w, 'good'); coinRain(14);
+      if (w >= 500) banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + w + ' 🪙');
       sWin(); haptic('win');
+      noteStreak(true);
+      pushHist('histDice', { l: `${u}:${b}`, c: 'w', t: `Победа +${w}` });
     } else if (u < b) {
-      setResult('res-dice', `${u} : ${b} — проигрыш −${state.bet} 😢`, 'lose');
+      db.classList.add('win-die'); du.classList.add('lose-die');
+      setResult('res-dice', `${u} : ${b} — ${LOSE_MSGS[rnd(LOSE_MSGS.length)]} · −${state.bet}`, 'lose');
       floatGain('−' + state.bet, 'bad');
       sLose(); haptic('lose');
+      noteStreak(false);
+      pushHist('histDice', { l: `${u}:${b}`, c: 'l', t: `Проигрыш −${state.bet}` });
     } else {
       state.balance += state.bet; save(); render();
       setResult('res-dice', `🤝 ${u} : ${b} — ничья, ставка возвращена`, '');
+      noteStreak(null);
+      pushHist('histDice', { l: `${u}:${b}`, c: 'd', t: 'Ничья — ставка возвращена' });
     }
     $('card-dice').classList.remove('active');
-    $('btn-dice').disabled = false;
+    setBusy('btn-dice', false);
     busy = false;
   }
 
@@ -1371,18 +1627,19 @@
   async function playCoin() {
     if (busy || !takeBet()) return;
     busy = true;
-    $('btn-coin').disabled = true;
+    setBusy('btn-coin', true);
     $('card-coin').classList.add('active');
     setResult('res-coin', 'Монетка в воздухе…', '');
     const coin = $('coinEl');
-    coin.classList.add('flipping');
+    coin.classList.remove('toss'); void coin.offsetWidth;
+    coin.classList.add('toss');
     const tick = setInterval(sTick, 150);
     const iv = setInterval(() => {
       coin.textContent = coin.textContent === '🦅' ? '👑' : '🦅';
     }, 100);
-    await sleep(1400);
+    await sleep(1350);
     clearInterval(iv); clearInterval(tick);
-    coin.classList.remove('flipping');
+    coin.classList.remove('toss');
     const heads = Math.random() < 0.5;
     coin.textContent = heads ? '🦅' : '👑';
     coin.classList.add('pop');
@@ -1390,19 +1647,25 @@
     sStop(); haptic();
     await sleep(400);
 
+    const side = heads ? '🦅' : '👑';
     if ((coinChoice === 'heads') === heads) {
       const w = payout(2);
       setResult('res-coin', `🎉 ${heads ? 'Орёл' : 'Решка'}! Угадал, +${w}`, 'win');
       floatGain('+' + w, 'good'); coinRain(14);
+      if (w >= 500) banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + w + ' 🪙');
       sWin(); haptic('win');
+      noteStreak(true);
+      pushHist('histCoin', { l: side, c: 'w', t: `${heads ? 'Орёл' : 'Решка'} · +${w}` });
     } else {
       setResult('res-coin', `${heads ? 'Выпал орёл' : 'Выпала решка'} — мимо, −${state.bet} 😢`, 'lose');
       floatGain('−' + state.bet, 'bad');
       sLose(); haptic('lose');
+      noteStreak(false);
+      pushHist('histCoin', { l: side, c: 'l', t: `${heads ? 'Орёл' : 'Решка'} · −${state.bet}` });
     }
     setTimeout(() => { coin.textContent = '🪙'; }, 1800);
     $('card-coin').classList.remove('active');
-    $('btn-coin').disabled = false;
+    setBusy('btn-coin', false);
     busy = false;
   }
 
@@ -1825,6 +2088,9 @@
   diceFace($('dice-user'), 5);
   diceFace($('dice-bot'), 3);
   $('soundBtn').textContent = state.sound ? '🔊' : '🔇';
+  renderHist('histSlots');
+  renderHist('histDice');
+  renderHist('histCoin');
   buildPlinko();
   buildRoulette();
   render();
