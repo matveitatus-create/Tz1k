@@ -213,6 +213,16 @@
   }
   .coins.bump { animation: bump .45s cubic-bezier(.3,1.6,.5,1); }
   @keyframes bump { 35% { transform: scale(1.14); } }
+  .coins.bump.up { animation: bumpUpC .55s cubic-bezier(.3,1.6,.5,1); }
+  .coins.bump.down { animation: bumpDownC .55s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes bumpUpC {
+    35% { transform: scale(1.16); color: #8dffb6; text-shadow: 0 0 22px rgba(46,255,143,.9); }
+  }
+  @keyframes bumpDownC {
+    35% { transform: scale(.9); color: #ff9db1; text-shadow: 0 0 18px rgba(255,84,112,.7); }
+  }
+  .jp-val.bump { animation: jpBump .45s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes jpBump { 40% { transform: scale(1.2); text-shadow: 0 0 30px rgba(255,209,102,1), 0 2px 0 #7a5c00; } }
   /* фишка казино */
   .chip3d {
     width: 46px; height: 46px; border-radius: 50%; flex: none; position: relative; z-index: 1;
@@ -633,6 +643,7 @@
   }
   .side-btn.sel::after { content: ' ✓'; color: var(--gold); }
   .side-btn:active { transform: scale(.95); }
+  .side-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
   /* --- ИСТОРИЯ РАУНДОВ --- */
   .hist { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; min-height: 26px; }
@@ -986,9 +997,9 @@
       <div class="game-title">🎰 Однорукий бандит</div>
       <div class="game-hint">Дёрни рычаг или жми «КРУТИТЬ» · ⚡ АВТО крутит без остановки</div>
       <div class="jp-box">
-        <div class="jp-pillar l"></div>
-        <div class="jp-pillar r"></div>
-        <div class="jp-crown">👑</div>
+        <div class="jp-pillar l" aria-hidden="true"></div>
+        <div class="jp-pillar r" aria-hidden="true"></div>
+        <div class="jp-crown" aria-hidden="true">👑</div>
         <div class="jp-label">⭐ Прогрессивный джекпот ⭐</div>
         <div class="jp-val" id="jpVal">500</div>
         <div class="jp-note">Три 7️⃣ срывают весь банк · +10% каждой ставки</div>
@@ -1003,7 +1014,7 @@
               <div class="reel" id="rw3"><div class="strip" id="s3"><div class="cell">🍊</div></div></div>
             </div>
             <div class="lever-col">
-              <div class="lever" id="lever" onclick="playSlots()">
+              <div class="lever" id="lever" role="button" tabindex="0" aria-label="Рычаг — крутить слоты" onclick="playSlots()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playSlots()}">
                 <div class="lever-stick"></div>
                 <div class="lever-base"></div>
               </div>
@@ -1024,7 +1035,7 @@
         <div class="pay">пара <b>×2</b></div>
       </div>
       <button class="play-btn" id="btn-slots" onclick="playSlots()">★ КРУТИТЬ ★</button>
-      <div class="result" id="res-slots"></div>
+      <div class="result" id="res-slots" aria-live="polite"></div>
       <div class="hist" id="hist-slots"><span class="hist-empty">История спинов появится здесь</span></div>
       <div class="odds">
         <span class="odd">Три в ряд <b>≈ 2%</b></span>
@@ -1047,7 +1058,7 @@
         </div>
       </div>
       <button class="play-btn" id="btn-dice" onclick="playDice()">★ БРОСИТЬ ★</button>
-      <div class="result" id="res-dice"></div>
+      <div class="result" id="res-dice" aria-live="polite"></div>
       <div class="hist" id="hist-dice"><span class="hist-empty">История бросков появится здесь</span></div>
       <div class="odds">
         <span class="odd">Победа <b>≈ 42%</b></span>
@@ -1063,16 +1074,16 @@
       <div class="game-title">🪙 Монетка</div>
       <div class="game-hint">Орёл или решка? Угадай сторону — забери ×2</div>
       <div class="coin-stage">
-        <div class="coin-halo"></div>
+        <div class="coin-halo" aria-hidden="true"></div>
         <div class="coin" id="coinEl">🪙</div>
-        <div class="coin-pedestal"></div>
+        <div class="coin-pedestal" aria-hidden="true"></div>
       </div>
       <div class="coin-choice">
         <button class="side-btn sel" id="ch-heads" onclick="setCoinChoice('heads')">🦅 Орёл</button>
         <button class="side-btn" id="ch-tails" onclick="setCoinChoice('tails')">👑 Решка</button>
       </div>
       <button class="play-btn" id="btn-coin" onclick="playCoin()">★ ПОДБРОСИТЬ ★</button>
-      <div class="result" id="res-coin"></div>
+      <div class="result" id="res-coin" aria-live="polite"></div>
       <div class="hist" id="hist-coin"><span class="hist-empty">История бросков появится здесь</span></div>
       <div class="odds">
         <span class="odd">Шанс <b>50 / 50</b></span>
@@ -1251,7 +1262,8 @@
     if (balAnim) cancelAnimationFrame(balAnim);
     if (start !== target) {
       const c = $('balanceCoins');
-      c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump');
+      c.classList.remove('bump', 'up', 'down'); void c.offsetWidth;
+      c.classList.add('bump', target > start ? 'up' : 'down');
     }
     if (start === target) { el.textContent = target.toLocaleString('ru-RU'); return; }
     const t0 = performance.now(), dur = 550;
@@ -1263,10 +1275,16 @@
       if (p < 1) balAnim = requestAnimationFrame(step);
     })(t0);
   }
+  let _prevJp = null;
   function render() {
     renderBalance();
     $('betVal').textContent = state.bet;
-    $('jpVal').textContent = state.jackpot.toLocaleString('ru-RU');
+    const jpEl = $('jpVal');
+    jpEl.textContent = state.jackpot.toLocaleString('ru-RU');
+    if (_prevJp !== null && state.jackpot > _prevJp) {
+      jpEl.classList.remove('bump'); void jpEl.offsetWidth; jpEl.classList.add('bump');
+    }
+    _prevJp = state.jackpot;
     $('stGames').textContent = state.games;
     $('stWins').textContent = state.wins;
     $('stBest').textContent = state.best;
@@ -1360,6 +1378,7 @@
     state[key].unshift(item);
     state[key] = state[key].slice(0, 8);
     renderHist(key);
+    save();
   }
   function renderHist(key) {
     const box = $(HIST_BOX[key]);
@@ -1382,9 +1401,10 @@
   function setBusy(id, on) {
     const b = $(id);
     if (!b || !BTN_IDLE[id]) return;
-    b.disabled = !!on;
-    b.classList.toggle('busy', !!on);
-    b.textContent = on ? BTN_BUSY[id] : BTN_IDLE[id];
+    const autoHold = (id === 'btn-slots' && !on && autoOn);
+    b.disabled = !!on || autoHold;
+    b.classList.toggle('busy', !!on || autoHold);
+    b.textContent = on ? BTN_BUSY[id] : (autoHold ? '⏳ АВТО-РЕЖИМ…' : BTN_IDLE[id]);
   }
   const LOSE_MSGS = ['Не в этот раз 😢', 'Почти! Крути ещё 🍀', 'Мимо… но банк растёт 💰', 'Удача уже рядом 🎯'];
 
@@ -1513,7 +1533,7 @@
       const win = payout(2);
       setResult('res-slots', `✨ Пара! +${win}`, 'win');
       floatGain('+' + win, 'good'); coinRain(10);
-      if (win >= 500) banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + win + ' 🪙');
+      if (win >= 500) { banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + win + ' 🪙'); confetti(); flash(); }
       sWin(); haptic('win');
       noteStreak(true);
       pushHist('histSlots', { l: '+' + win, c: 'w', t: `Пара ×2 · ${line}` });
@@ -1537,6 +1557,7 @@
     const b = $('btn-auto');
     b.classList.toggle('on', autoOn);
     b.textContent = autoOn ? '⏹ СТОП' : '⚡ АВТО';
+    if (!busy) setBusy('btn-slots', false);
   }
   async function autoLoop() {
     while (autoOn) {
@@ -1593,7 +1614,7 @@
       du.classList.add('win-die'); db.classList.add('lose-die');
       setResult('res-dice', `🎉 ${u} : ${b} — победа! +${w}`, 'win');
       floatGain('+' + w, 'good'); coinRain(14);
-      if (w >= 500) banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + w + ' 🪙');
+      if (w >= 500) { banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + w + ' 🪙'); confetti(); flash(); }
       sWin(); haptic('win');
       noteStreak(true);
       pushHist('histDice', { l: `${u}:${b}`, c: 'w', t: `Победа +${w}` });
@@ -1618,6 +1639,7 @@
   // --- МОНЕТКА ---
   let coinChoice = 'heads';
   function setCoinChoice(c) {
+    if (busy) return;
     coinChoice = c;
     $('ch-heads').classList.toggle('sel', c === 'heads');
     $('ch-tails').classList.toggle('sel', c === 'tails');
@@ -1628,6 +1650,7 @@
     if (busy || !takeBet()) return;
     busy = true;
     setBusy('btn-coin', true);
+    $('ch-heads').disabled = true; $('ch-tails').disabled = true;
     $('card-coin').classList.add('active');
     setResult('res-coin', 'Монетка в воздухе…', '');
     const coin = $('coinEl');
@@ -1652,7 +1675,7 @@
       const w = payout(2);
       setResult('res-coin', `🎉 ${heads ? 'Орёл' : 'Решка'}! Угадал, +${w}`, 'win');
       floatGain('+' + w, 'good'); coinRain(14);
-      if (w >= 500) banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + w + ' 🪙');
+      if (w >= 500) { banner('БОЛЬШОЙ ВЫИГРЫШ!', '+' + w + ' 🪙'); confetti(); flash(); }
       sWin(); haptic('win');
       noteStreak(true);
       pushHist('histCoin', { l: side, c: 'w', t: `${heads ? 'Орёл' : 'Решка'} · +${w}` });
@@ -1664,6 +1687,7 @@
       pushHist('histCoin', { l: side, c: 'l', t: `${heads ? 'Орёл' : 'Решка'} · −${state.bet}` });
     }
     setTimeout(() => { coin.textContent = '🪙'; }, 1800);
+    $('ch-heads').disabled = false; $('ch-tails').disabled = false;
     $('card-coin').classList.remove('active');
     setBusy('btn-coin', false);
     busy = false;
