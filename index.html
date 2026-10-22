@@ -108,6 +108,9 @@
   }
 
   .container { max-width: 430px; margin: 0 auto; padding: 14px 16px 30px; }
+  @supports (padding: env(safe-area-inset-bottom)) {
+    .container { padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
+  }
 
   /* ================= ВЕРХНЯЯ ПАНЕЛЬ ================= */
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -1213,8 +1216,14 @@
   let AC = null;
   function ac() {
     if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume().catch(() => {});
     return AC;
   }
+  // резервный resume звукового контекста по первому жесту (iOS WebView)
+  document.addEventListener('pointerdown', function once() {
+    document.removeEventListener('pointerdown', once);
+    try { if (state.sound) ac().resume().catch(() => {}); } catch (e) {}
+  }, { once: true });
   function tone(freq, dur, type, vol, when) {
     if (!state.sound) return;
     try {
@@ -1638,6 +1647,7 @@
 
   // --- МОНЕТКА ---
   let coinChoice = 'heads';
+  let coinResetT = null;
   function setCoinChoice(c) {
     if (busy) return;
     coinChoice = c;
@@ -1654,6 +1664,7 @@
     $('card-coin').classList.add('active');
     setResult('res-coin', 'Монетка в воздухе…', '');
     const coin = $('coinEl');
+    clearTimeout(coinResetT);
     coin.classList.remove('toss'); void coin.offsetWidth;
     coin.classList.add('toss');
     const tick = setInterval(sTick, 150);
@@ -1686,7 +1697,7 @@
       noteStreak(false);
       pushHist('histCoin', { l: side, c: 'l', t: `${heads ? 'Орёл' : 'Решка'} · −${state.bet}` });
     }
-    setTimeout(() => { coin.textContent = '🪙'; }, 1800);
+    coinResetT = setTimeout(() => { coin.textContent = '🪙'; }, 1800);
     $('ch-heads').disabled = false; $('ch-tails').disabled = false;
     $('card-coin').classList.remove('active');
     setBusy('btn-coin', false);
