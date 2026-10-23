@@ -1216,7 +1216,7 @@
     const s = JSON.parse(localStorage.getItem(STORE_KEY));
     if (s) state = Object.assign(state, s);
   } catch(e) {}
-  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {} }
 
   // ===== звук =====
   let AC = null;
