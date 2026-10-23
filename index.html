@@ -954,7 +954,7 @@
       <div class="ava" id="userAva">И</div>
       <div class="name" id="userName">Игрок</div>
     </div>
-    <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+    <button class="icon-btn" id="soundBtn" aria-label="Переключить звук" onclick="toggleSound()">🔊</button>
   </div>
 
   <div class="marquee-sign">
@@ -981,9 +981,9 @@
   </div>
 
   <div class="bet-control">
-    <button class="bet-btn minus" onclick="changeBet(-10)">−</button>
+    <button class="bet-btn minus" aria-label="Уменьшить ставку" onclick="changeBet(-10)">−</button>
     <div class="bet-val">🎯 <span id="betVal">10</span></div>
-    <button class="bet-btn plus" onclick="changeBet(10)">+</button>
+    <button class="bet-btn plus" aria-label="Увеличить ставку" onclick="changeBet(10)">+</button>
   </div>
   <div class="bet-chips">
     <button class="chip sel" onclick="setBet(10, this)">10</button>
@@ -992,13 +992,13 @@
     <button class="chip" onclick="setBet('max', this)">MAX</button>
   </div>
 
-  <div class="tabs">
+  <div class="tabs" role="tablist">
     <div class="tab-ink" id="tabInk"></div>
-    <div class="tab active" data-game="slots" onclick="switchGame('slots')">🎰 Слоты</div>
-    <div class="tab" data-game="dice" onclick="switchGame('dice')">🎲 Кости</div>
-    <div class="tab" data-game="coin" onclick="switchGame('coin')">🪙 Монетка</div>
-    <div class="tab" data-game="plinko" onclick="switchGame('plinko')">🔻 Плинко</div>
-    <div class="tab" data-game="roulette" onclick="switchGame('roulette')">🎡 Рулетка</div>
+    <div class="tab active" role="tab" tabindex="0" aria-selected="true" data-game="slots" onclick="switchGame('slots')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchGame('slots')}">🎰 Слоты</div>
+    <div class="tab" role="tab" tabindex="0" aria-selected="false" data-game="dice" onclick="switchGame('dice')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchGame('dice')}">🎲 Кости</div>
+    <div class="tab" role="tab" tabindex="0" aria-selected="false" data-game="coin" onclick="switchGame('coin')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchGame('coin')}">🪙 Монетка</div>
+    <div class="tab" role="tab" tabindex="0" aria-selected="false" data-game="plinko" onclick="switchGame('plinko')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchGame('plinko')}">🔻 Плинко</div>
+    <div class="tab" role="tab" tabindex="0" aria-selected="false" data-game="roulette" onclick="switchGame('roulette')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchGame('roulette')}">🎡 Рулетка</div>
   </div>
 
   <!-- СЛОТЫ -->
@@ -1442,7 +1442,11 @@
       autoOn = false; renderAuto();
       toast('⏸ Авто остановлено: выход со вкладки слотов');
     }
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.game === name));
+    document.querySelectorAll('.tab').forEach(t => {
+      const on = t.dataset.game === name;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('show', p.id === 'panel-' + name));
     const idx = ['slots', 'dice', 'coin', 'plinko', 'roulette'].indexOf(name);
     $('tabInk').style.transform = `translateX(${idx * 100}%)`;
