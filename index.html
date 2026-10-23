@@ -1437,6 +1437,10 @@
 
   // ===== вкладки =====
   function switchGame(name) {
+    if (name !== 'slots' && autoOn) {
+      autoOn = false; renderAuto();
+      toast('⏸ Авто остановлено: выход со вкладки слотов');
+    }
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.game === name));
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('show', p.id === 'panel-' + name));
     const idx = ['slots', 'dice', 'coin', 'plinko', 'roulette'].indexOf(name);
