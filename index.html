@@ -1588,6 +1588,13 @@
     renderAuto(); sClick(); haptic();
     if (autoOn && !busy) autoLoop();
   }
+  // безопасность: не крутить монеты, пока приложение свёрнуто
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && autoOn) {
+      autoOn = false; renderAuto();
+      toast('⏸ Авто остановлено: приложение свёрнуто');
+    }
+  });
 
   // --- КОСТИ ---
   function diceFace(el, n) {
